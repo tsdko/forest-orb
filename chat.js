@@ -500,6 +500,7 @@ function constrainByteLength(length) {
 }
 
 document.getElementById('chatInput').addEventListener('input', constrainByteLength(150));
+document.getElementById('gameChatInput').addEventListener('input', constrainByteLength(150));
 
 function chatNameCheck() {
   trySetChatName(document.getElementById("nameInput").value);
