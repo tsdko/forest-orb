@@ -2,7 +2,7 @@ let playerFriendsCache = [];
 let pendingOfflineFriendUuids = [];
 
 function updatePlayerFriends() {
-  if (loggedIn)
+  if (loginToken)
     sendSessionCommand('pf');
   else
     onUpdatePlayerFriends([]);

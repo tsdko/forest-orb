@@ -27,7 +27,9 @@ function initRankingControls() {
 
 function rankingsApiFetch(path) {
   return new Promise((resolve, reject) => {
-    fetch(`${rankingsUrl}/${path}`, { credentials: "include" })
+    const sId = getCookie(sessionIdKey);
+    const headers = sId ? { 'Authorization': sId } : {};
+    fetch(`${rankingsUrl}/${path}`, { headers: headers })
       .then(response => resolve(response))
       .catch(err => reject(err));
   });

@@ -105,7 +105,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tippy.js@6.3.7/dist/tippy-bundle.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/scrollwatch@2.0.1/dist/ScrollWatch-2.0.1.min.js"></script>
-  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </head>
 <body <?php if ($isFirefox): ?>class="browserFirefox"<?php endif ?>>
   <div id="background"></div>
@@ -528,12 +527,11 @@
                   <label id="loginError"></label>
                 </li>
               </ul>
-              <div class="cf-turnstile" data-sitekey="0x4AAAAAAB2ijZ45647GuniE"></div>
               <button type="submit" data-i18n="[html]modal.login.submit">Submit</button>
             </form>
           </div>
           <div class="modalFooter">
-            <span class="infoLabel" data-i18n="[html]modal.login.registerPrompt">Don't have an account?&nbsp;</span><a id="loginRegisterLink" href="javascript:void(0);" data-i18n="[html]modal.login.register">Register</a>
+            <span class="infoLabel" data-i18n="[html]modal.login.registerPrompt">Don't have an account?&nbsp;</span><a href="javascript:void(0);" onclick="openModal('registerModal')" data-i18n="[html]modal.login.register">Register</a>
           </div>
         </div>
         <div id="registerModal" class="modal hidden">
@@ -560,7 +558,6 @@
                   <label id="registerError"></label>
                 </li>
               </ul>
-              <div class="cf-turnstile" data-sitekey="0x4AAAAAAB2ijZ45647GuniE"></div>
               <button type="submit" data-i18n="[html]modal.register.submit">Submit</button>
             </form>
           </div>

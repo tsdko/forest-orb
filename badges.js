@@ -1668,7 +1668,7 @@ function formatBadgeContainer(badgeSlots) {
 
 // EXTERNAL
 async function onBadgeUpdateRequested() {
-  if (loggedIn && !isCheckBadge) {
+  if (loginToken && !isCheckBadge) {
     isCheckBadge = true;
     try {
       await checkNewBadgeUnlocks();

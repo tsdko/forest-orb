@@ -1,47 +1,44 @@
-let loggedIn = false;
+let loginToken = null;
 
 function initAccountControls() {
   document.getElementById('loginButton').onclick = () => {
     document.getElementById('loginErrorRow').classList.add('hidden');
     openModal('loginModal');
-    turnstile.reset();
   };
   document.getElementById('logoutButton').onclick = () => {
     showConfirmModal(localizedMessages.logout, () => {
-      authApiFetch('logout')
+      apiFetch('logout')
         .then(response => {
           if (!response.ok)
             console.error(response.statusText);
-          setCookie(loggedInKey, '');
           closeSessionWs();
-          fetchAndUpdatePlayerInfo(false);
+          setCookie(sessionIdKey, '');
+          fetchAndUpdatePlayerInfo();
         }).catch(err => console.error(err));
     });
   };
 
   document.getElementById('loginForm').onsubmit = function () {
     const form = this;
-    authApiPost('login', new URLSearchParams(new FormData(form)), 'application/x-www-form-urlencoded')
+    apiPost('login', new URLSearchParams(new FormData(form)), 'application/x-www-form-urlencoded')
       .then(response => {
         if (!response.ok) {
           response.text().then(_ => {
             document.getElementById('loginError').innerHTML = getMassagedLabel(localizedMessages.account.login.errors.invalidLogin, true);
             document.getElementById('loginErrorRow').classList.remove('hidden');
           });
-          turnstile.reset();
           return;
         }
-        closeSessionWs();
-        fetchAndUpdatePlayerInfo(true);
         closeModal();
-        return;
+        return response.text();
+      }).then(sId => {
+        if (sId) {
+          closeSessionWs();
+          setCookie(sessionIdKey, sId);
+          fetchAndUpdatePlayerInfo();
+        }
       }).catch(err => console.error(err));
     return false;
-  };
-
-  document.getElementById('loginRegisterLink').onclick = () => {
-    openModal('registerModal');
-    turnstile.reset();
   };
 
   document.getElementById('registerForm').onsubmit = function () {
@@ -51,19 +48,17 @@ function initAccountControls() {
       document.getElementById('registerErrorRow').classList.remove('hidden');
       return false;
     }
-    authApiPost('register', new URLSearchParams(new FormData(form)), 'application/x-www-form-urlencoded')
+    apiPost('register', new URLSearchParams(new FormData(form)), 'application/x-www-form-urlencoded')
       .then(response => {
         if (!response.ok) {
           response.text().then(error => {
             document.getElementById('registerError').innerHTML = getMassagedLabel(localizedMessages.account.register.errors[error.replace('\n', '') === 'user exists' ? 'usernameTaken' : 'invalidCredentials'], true);
             document.getElementById('registerErrorRow').classList.remove('hidden');
           });
-          turnstile.reset();
           return;
         }
         document.getElementById('loginErrorRow').classList.add('hidden');
         openModal('loginModal');
-        turnstile.reset();
       })
       .catch(err => console.error(err));
     return false;

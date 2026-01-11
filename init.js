@@ -65,11 +65,9 @@ let easyrpgPlayer = {
 };
 let easyrpgPlayerLoadFuncs = [];
 
-const loggedInKey = 'ynoproject_loggedIn';
-const serverUrlBase = 'https://connect.ynoproject.net';
-const serverUrl = `${serverUrlBase}/${ynoGameId}`;
+const sessionIdKey = 'ynoproject_sessionId';
+const serverUrl = `https://connect.ynoproject.net/${ynoGameId}`;
 const apiUrl = `${serverUrl}/api`;
-const authApiUrl = `${serverUrlBase}/seiko`;
 const adminApiUrl = `${serverUrl}/admin`;
 const ynomojiUrlPrefix = 'images/ynomoji/';
 
@@ -112,7 +110,7 @@ async function injectScripts() {
           const loadingOverlay = document.getElementById('loadingOverlay');
           removeLoader(loadingOverlay);
           checkShowVersionUpdate().then(() => loadingOverlay.classList.add('loaded'));
-          fetchAndUpdatePlayerInfo(getCookie(loggedInKey) ? true : undefined);
+          fetchAndUpdatePlayerInfo();
           setInterval(checkLogin, 60000);
           setTimeout(() => {
             checkDependenciesModified();
@@ -236,7 +234,9 @@ function fetchNewest(path, important, req) {
 }
 
 function apiFetch(path, isAdmin) {
-  return fetch(`${isAdmin ? adminApiUrl : apiUrl}/${path}`, { credentials: "include" });
+  const sId = getCookie(sessionIdKey);
+  const headers = sId ? { 'Authorization': sId } : {};
+  return fetch(`${isAdmin ? adminApiUrl : apiUrl}/${path}`, { headers: headers });
 }
 
 function apiPost(path, data, contentType) {
@@ -246,25 +246,14 @@ function apiPost(path, data, contentType) {
     'Accept': contentType,
     'Content-Type': contentType
   };
-  return fetch(`${apiUrl}/${path}`, { method: 'POST', headers: headers, credentials: "include", body: data });
+  const sId = getCookie(sessionIdKey);
+  if (sId)
+    headers['Authorization'] = sId;
+  return fetch(`${apiUrl}/${path}`, { method: 'POST', headers: headers, body: data });
 }
 
 function apiJsonPost(path, data) {
   return apiPost(path, JSON.stringify(data));
-}
-
-function authApiFetch(path) {
-  return fetch(`${authApiUrl}/${path}`, { credentials: "include" });
-}
-
-function authApiPost(path, data, contentType) {
-  if (!contentType)
-    contentType = 'application/json';
-  const headers = {
-    'Accept': contentType,
-    'Content-Type': contentType
-  };
-  return fetch(`${authApiUrl}/${path}`, { method: 'POST', headers: headers, credentials: "include", body: data });
 }
 
 function wikiApiFetch(action, query) {
@@ -447,7 +436,7 @@ function createPlayerTooltip(target, player, uuid, messageType, msgProps) {
   if (messageType)
     tooltipHtml += `<a href="javascript:void(0);" class="pingPlayerAction playerAction">${getMassagedLabel(localizedMessages.context.ping.label, true).replace('{PLAYER}', playerName)}</a>`;
 
-  if (loggedIn && player.account) {
+  if (loginToken && player.account) {
     if (tooltipHtml)
       tooltipHtml += '<br>';
     tooltipHtml += `<a href="javascript:void(0);" class="addPlayerFriendAction playerAction">${getMassagedLabel(localizedMessages.context.addFriend.label, true).replace('{PLAYER}', playerName)}</a>
@@ -461,7 +450,7 @@ function createPlayerTooltip(target, player, uuid, messageType, msgProps) {
                     <a href="javascript:void(0);" class="unblockPlayerAction playerAction">${getMassagedLabel(localizedMessages.context.unblock.label, true).replace('{PLAYER}', playerName)}</a>`;
   }
 
-  if (loggedIn) {
+  if (loginToken) {
     if (tooltipHtml)
       tooltipHtml += '<br>';
     tooltipHtml += `<a href="javascript:void(0);" class="reportPlayerAction playerAction">${getMassagedLabel(localizedMessages.context.report.label).replace('{PLAYER}', playerName)}</a>`;
@@ -513,7 +502,7 @@ function createPlayerTooltip(target, player, uuid, messageType, msgProps) {
     };
   }
 
-  if (loggedIn && player.account) {
+  if (loginToken && player.account) {
     playerTooltip.popper.querySelector('.addPlayerFriendAction').onclick = function () {
       let cachedPlayerFriend = playerFriendsCache.find(pf => pf.uuid === uuid);
       if (cachedPlayerFriend && (cachedPlayerFriend.accepted || !cachedPlayerFriend.incoming))
@@ -1086,7 +1075,7 @@ function getCookie(cName) {
     showSystemToastMessage('error', 'important');
   });
 
-  if (!getCookie(loggedInKey))
+  if (!getCookie(sessionIdKey))
     injectScripts();
   else
     trySyncSave().then(_ => injectScripts());

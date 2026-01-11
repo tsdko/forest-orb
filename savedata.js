@@ -11,7 +11,7 @@ function initSaveSyncControls() {
     });
   };
 
-  if (getCookie(loggedInKey)) {
+  if (getCookie(sessionIdKey)) {
     apiFetch('savesync?command=timestamp')
       .then(response => {
         if (!response.ok)
@@ -25,7 +25,7 @@ function initSaveSyncControls() {
         else
           clearSaveSyncButton.setAttribute('disabled', true);
       });
-    }
+  }
 }
 
 function initSaveDataControls() {
@@ -273,7 +273,7 @@ function formatSaveSlotId(saveSlotId) {
 
 // EXTERNAL
 function onSaveSlotUpdated(slotId) {
-  if (loggedIn && slotId == saveSyncSlotId)
+  if (loginToken && slotId == saveSyncSlotId)
     getAndUploadSaveSyncData();
 }
 
@@ -299,7 +299,7 @@ function getSaveDataForSync() {
 
 function uploadSaveSyncData(saveData) {
   return new Promise(resolve => {
-    if (!loggedIn)
+    if (!loginToken)
       resolve(false);
     showSaveSyncToastMessage('saveUploading', 'saveUpload', saveSyncSlotId);
     apiPost('savesync?command=push', saveData.contents)
@@ -376,7 +376,7 @@ function trySyncSave() {
 
 function clearSaveSyncData() {
   return new Promise(resolve => {
-    if (!loggedIn)
+    if (!loginToken)
       resolve(false);
     apiFetch(`savesync?command=clear`)
       .then(_ => {

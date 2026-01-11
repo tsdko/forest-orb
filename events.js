@@ -51,7 +51,7 @@ function onClickEventTab() {
 }
 
 function updateEventPeriod() {
-  if (!loggedIn)
+  if (!loginToken)
     return;
   sendSessionCommand('ep');
 }
@@ -69,7 +69,7 @@ function onUpdateEventPeriod(eventPeriod) {
 }
 
 function updateEvents() {
-  if (!loggedIn || !eventPeriodCache)
+  if (!loginToken || !eventPeriodCache)
     return;
   sendSessionCommand('e');
 }
@@ -331,7 +331,7 @@ function updateNextLocations(locations) {
 }
 
 function updatePlayerExp() {
-  if (!loggedIn)
+  if (!loginToken)
     return;
   sendSessionCommand('eexp');
 }
@@ -398,7 +398,7 @@ function onClaimEventLocationPoints(location, free, result) {
 }
 
 function checkEventLocations() {
-  if (loggedIn && cachedLocations && eventsCache.locations?.length) {
+  if (loginToken && cachedLocations && eventsCache.locations?.length) {
     const incompleteEventLocations = eventsCache.locations.filter(el => !el.complete && el.game === gameId);
     const incompleteEventLocationNames = incompleteEventLocations.map(el => el.title);
     const eventLocationMatch = cachedLocations.map(l => {

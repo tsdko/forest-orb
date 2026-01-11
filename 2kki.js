@@ -649,7 +649,7 @@ function reloadExplorer(trackedLocations) {
     return;
   }
   const locationNames = cachedLocations.map(l => get2kkiWikiLocationName(l));
-  if (explorerFrame && locationNames && loggedIn) {
+  if (explorerFrame && locationNames && loginToken) {
     addLoader(explorerFrame, true);
     explorerFrame.onload = () => removeLoader(explorerFrame);
     apiFetch(`explorer${trackedLocations ? `?trackedLocations=${trackedLocations.map(l => l.title).join('|')}` : ''}`).then(response => {

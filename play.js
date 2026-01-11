@@ -214,17 +214,20 @@ function onRoomSwitch() {
   updateJoinedParty();
 }
 
-function fetchAndUpdatePlayerInfo(forLogin) {
-  const isLogin = forLogin !== undefined && forLogin;
-  const isLogout = forLogin !== undefined && !forLogin;
-
+function fetchAndUpdatePlayerInfo() {
+  const cookieSessionId = getCookie(sessionIdKey);
+  const isLogin = cookieSessionId && cookieSessionId !== loginToken;
+  const isLogout = !cookieSessionId && loginToken && cookieSessionId !== loginToken;
   if (isLogin || isLogout) {
+    loginToken = isLogin ? cookieSessionId : null;
+    easyrpgPlayer.api.setSessionToken(isLogin ? loginToken : '');
     playerTooltipCache.clear();
   }
   navigator.serviceWorker?.getRegistration('/').then(registration => {
     if (!registration)
       console.warn('updating player info but no service workers found');
     registration?.active?.postMessage({
+      sessionId: cookieSessionId,
       game: gameId,
     });
   });
@@ -232,15 +235,13 @@ function fetchAndUpdatePlayerInfo(forLogin) {
     .then(response => response.json())
     .then(jsonResponse => {
       if (jsonResponse.uuid) {
-        const wasLoggedIn = loggedIn;
-        loggedIn = !isLogout && jsonResponse.registered;
-        setCookie(loggedInKey, loggedIn ? 'true' : '');
+        loggedIn = !!loginToken;
         const fsBadgesButton = document.getElementById('fsBadgesButton');
         if (fsBadgesButton)
           fsBadgesButton.classList.toggle('hidden', !loggedIn);
         if (jsonResponse.name)
           playerName = jsonResponse.name;
-        syncPlayerData(jsonResponse.uuid, jsonResponse.rank, jsonResponse.registered, jsonResponse.badge, jsonResponse.medals, -1);
+        syncPlayerData(jsonResponse.uuid, jsonResponse.rank, loggedIn, jsonResponse.badge, jsonResponse.medals, -1);
         badgeSlotRows = jsonResponse.badgeSlotRows || 1;
         badgeSlotCols = jsonResponse.badgeSlotCols || 3;
         screenshotLimit = jsonResponse.screenshotLimit || 10;
@@ -276,7 +277,7 @@ function fetchAndUpdatePlayerInfo(forLogin) {
               trySetChatName(loggedIn ? playerName : '');
               updatePlayerFriends();
               updateParty();
-              if (isLogout && wasLoggedIn) {
+              if (isLogout) {
                 showAccountToastMessage('loggedOut', 'leave');
               }
               // Always update the loggedIn class to match the current state
@@ -291,25 +292,25 @@ function fetchAndUpdatePlayerInfo(forLogin) {
             });
         }
       } else if (isLogin) {
-        authApiFetch('logout');
-        fetchAndUpdatePlayerInfo(true);
+        setCookie(sessionIdKey, '');
+        fetchAndUpdatePlayerInfo();
       }
     })
     .catch(err => console.error(err));
 }
 
 function checkLogin() {
-  apiFetch('info')
-    .then(response => response.json())
-    .then(jsonResponse => {
-      if (!jsonResponse.registered) {
-        authApiFetch('logout').then(() => {
-          setCookie(loggedInKey, '');
-          fetchAndUpdatePlayerInfo(false);
-        });
-      }
-    })
-    .catch(err => console.error(err));
+  if (loginToken && loginToken === getCookie(sessionIdKey)) {
+    apiFetch('info')
+      .then(response => response.json())
+      .then(jsonResponse => {
+        if (!jsonResponse.uuid) {
+          setCookie(sessionIdKey, '');
+          fetchAndUpdatePlayerInfo();
+        }
+      })
+      .catch(err => console.error(err));
+  }
 }
 
 let playerCount;
