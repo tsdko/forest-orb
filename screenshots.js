@@ -447,6 +447,8 @@ function initScreenshotsModal(isCommunity) {
       screenshotThumbnailContainer.classList.add('screenshotThumbnailContainer', 'imageThumbnailContainer');
 
       const screenshotThumbnail = document.createElement('img');
+      if (isCommunity)
+        screenshotThumbnail.loading = 'lazy';
       screenshotThumbnail.classList.add('screenshotThumbnail', 'imageThumbnail', 'unselectable');
       screenshotThumbnail.src = `${ugcUrl}/screenshots/${uuid}/${screenshot.id}.png`;
       screenshotThumbnail.onclick = () => viewScreenshot(screenshotThumbnail.src, new Date(screenshot.timestamp), screenshot, screenshotsModal.id);
